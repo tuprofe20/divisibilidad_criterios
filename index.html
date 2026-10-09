@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lab Criterios de Divisibilidad</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --mouse-x: 50vw;
+            --mouse-y: 50vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* Animaciones */
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+        @keyframes pulse-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes gradient-bg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes float-robot { 0%, 100% { transform: translateY(0px) rotate(-3deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-bounce { animation: pulse-bounce 1.5s infinite ease-in-out; }
+        .animate-fade-in { animation: fade-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-gradient-bg { background-size: 200% 200%; animation: gradient-bg 12s ease infinite; }
+        .animate-float-robot { animation: float-robot 4s ease-in-out infinite; }
+
+        /* Estilos de botones y paneles */
+        .toy-panel { 
+            background: #ffffff; border-radius: 1.5rem; border: 4px solid #cbd5e1; 
+            border-bottom-width: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
+        }
+        @media (min-width: 768px) { .toy-panel { border-radius: 2rem; border-width: 6px; border-bottom-width: 12px; } }
+        
+        .toy-button { 
+            border-bottom-width: 4px; transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); 
+            touch-action: manipulation; cursor: pointer; user-select: none;
+        }
+        @media (min-width: 768px) { .toy-button { border-bottom-width: 6px; } }
+        .toy-button:active { transform: translateY(4px); border-bottom-width: 0px; margin-bottom: 4px; }
+        @media (min-width: 768px) { .toy-button:active { transform: translateY(6px); margin-bottom: 6px; } }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Resplandor del cursor (solo visible en pantallas no táctiles/grandes) */
+        .cursor-glow {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 50;
+            background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.25), transparent 40%);
+            mix-blend-mode: overlay; transition: opacity 0.3s ease;
+        }
+        @media (max-width: 768px) { .cursor-glow { display: none; } }
+
+        /* Contenedores globales */
+        #app-root { min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        #particles-container { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        #ui-layer { position: relative; z-index: 10; flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-container"></div>
+    <div class="cursor-glow"></div>
+    <div id="app-root">
+        <div id="ui-layer"></div>
+    </div>
+
+    <script>
+        // Utilidades Matemáticas
+        const isDivisible = (num, divisor) => num % divisor === 0;
+        const getDigits = (num) => String(num).split('').map(Number);
+
+        // Estado Global de la App
+        const state = {
+            inPortal: true,
+            selectedNumber: 2541,
+            activeModule: 1,
+            inputValue: '',
+            moduleEndsRule: 2,
+            challenge: {
+                status: 'playing', // playing, won, lost
+                score: 0,
+                answers: {}
+            }
+        };
+
+        const exampleNumbers = [2541, 7568, 90865, 360852];
+        const challengeDivisors = [2, 3, 4, 5, 7, 8, 9, 11];
+
+        const modulesInfo = [
+            { id: 1, title: '¡A Jugar!', icon: 'ph-play-circle', color: 'text-pink-600' },
+            { id: 2, title: 'Las Colas', icon: 'ph-magnifying-glass', color: 'text-blue-600' },
+            { id: 3, title: 'Suma Mágica', icon: 'ph-plus-circle', color: 'text-purple-600' },
+            { id: 4, title: 'Criterio del 11', icon: 'ph-arrows-down-up', color: 'text-orange-600' },
+            { id: 5, title: 'El Código del 7', icon: 'ph-key', color: 'text-red-600' },
+            { id: 6, title: 'El Reto', icon: 'ph-trophy', color: 'text-yellow-500' },
+        ];
+
+        // variables para timeouts
+        let robotTypingInterval = null;
+
+        function playSound(type) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!window.audioCtx) window.audioCtx = new AudioContext();
+                const ctx = window.audioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                switch(type) {
+                    case 'click':
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(800, now);
+                        osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                        gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                        osc.start(now); osc.stop(now + 0.1); break;
+                    case 'pop':
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
+                        osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                        gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                        osc.start(now); osc.stop(now + 0.1); break;
+                    case 'explode':
+                        osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
+                        osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                        gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                        osc.start(now); osc.stop(now + 0.5); break;
+                    case 'success':
+                        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                            const osc2 = ctx.createOscillator(); const gain2 = ctx.createGain();
+                            osc2.connect(gain2); gain2.connect(ctx.destination);
+                            osc2.type = 'square'; osc2.frequency.value = freq;
+                            gain2.gain.setValueAtTime(0, now + i * 0.1);
+                            gain2.gain.linearRampToValueAtTime(0.1, now + i * 0.1 + 0.05);
+                            gain2.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
+                            osc2.start(now + i * 0.1); osc2.stop(now + i * 0.1 + 0.4);
+                        }); break;
+                    case 'error':
+                        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+                        osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                        gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                        osc.start(now); osc.stop(now + 0.4); break;
+                }
+            } catch (e) { console.warn("Audio no soportado", e); }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+
+        let currentParticlesMode = null;
+        function renderParticles(mode) {
+            if (currentParticlesMode === mode) return;
+            currentParticlesMode = mode;
+            const container = document.getElementById('particles-container');
+            container.innerHTML = '';
+            
+            const isPortal = mode === 'portal';
+            const count = isPortal ? 30 : 15;
+            const colors = isPortal 
+                ? ['text-white/40', 'text-yellow-300/50', 'text-pink-300/50', 'text-blue-900/20']
+                : ['text-blue-500/10', 'text-pink-500/10', 'text-teal-500/10', 'text-yellow-500/10'];
+            const symbols = isPortal 
+                ? ['÷2', '÷3', '÷4', '÷5', '÷7', '÷9', '÷11', '÷25', '+ - + -', '1,3,2']
+                : ['÷', '+', '-', '×', '=', '0', '✓', '✗'];
+
+            let html = '';
+            for(let i=0; i<count; i++) {
+                const size = Math.random() * (isPortal ? 40 : 30) + 16;
+                const left = `${Math.random() * 100}%`;
+                const top = `${Math.random() * 100}%`;
+                const animDuration = `${Math.random() * 8 + 8}s`;
+                const delay = `${Math.random() * 5}s`;
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                html += `<div class="absolute font-black animate-float ${color}" style="font-size:${size}px; left:${left}; top:${top}; animation-duration:${animDuration}; animation-delay:${delay};">${symbol}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderRobotHTML(mood = 'normal') {
+            const moods = {
+                normal: { bg: 'bg-blue-500', border: 'border-blue-700', icon: 'ph-robot text-white animate-bounce' },
+                happy: { bg: 'bg-green-500', border: 'border-green-700', icon: 'ph-robot text-white animate-bounce' },
+                warning: { bg: 'bg-red-500', border: 'border-red-700', icon: 'ph-warning text-white animate-pulse' }
+            };
+            const current = moods[mood];
+
+            return `
+            <div class="flex items-end gap-3 md:gap-4 animate-pop w-full mt-4 max-w-3xl mx-auto relative z-20 hover:scale-105 transition-transform duration-300">
+                <div class="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 ${current.bg} rounded-2xl md:rounded-3xl flex items-center justify-center border-2 md:border-4 ${current.border} shadow-[0_4px_0_rgba(0,0,0,0.15)] animate-float-robot cursor-help">
+                    <i class="ph-bold ${current.icon} text-3xl md:text-4xl"></i>
+                </div>
+                <div class="bg-white border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-2xl md:rounded-3xl rounded-bl-none shadow-md relative flex-1 cursor-default">
+                    <div class="absolute -left-3 bottom-2 w-4 h-4 bg-white border-b-2 md:border-b-4 border-l-2 md:border-l-4 border-slate-200 transform rotate-45"></div>
+                    <p class="text-sm sm:text-base md:text-lg font-bold text-slate-700 relative z-10 leading-snug min-h-[2.5rem]">
+                        <span id="robot-typing-text"></span>
+                        <span class="inline-block w-2 h-4 sm:h-5 bg-slate-400 ml-1 align-middle animate-pulse"></span>
+                    </p>
+                </div>
+            </div>`;
+        }
+
+        function initRobotTyping(text) {
+            if (robotTypingInterval) clearInterval(robotTypingInterval);
+            const textElement = document.getElementById('robot-typing-text');
+            if (!textElement) return;
+            textElement.textContent = '';
+            
+            let i = 0;
+            robotTypingInterval = setInterval(() => {
+                if (i < text.length) {
+                    textElement.textContent += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(robotTypingInterval);
+                }
+            }, 25);
+        }
+
+        function getPortalHTML() {
+            renderParticles('portal');
+            const btnsHTML = exampleNumbers.map(n => `
+                <button data-action="select-number" data-num="${n}" class="group relative toy-button px-4 py-2 sm:px-6 sm:py-3 bg-white/10 backdrop-blur-md text-white border-white/30 rounded-xl sm:rounded-2xl font-black text-lg sm:text-xl md:text-2xl shadow-lg hover:bg-yellow-400 hover:text-yellow-900 hover:border-yellow-600 transition-all min-w-[80px]">
+                    ${n}
+                </button>
+            `).join('');
+
+            return `
+            <div class="min-h-screen w-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-gradient-bg flex flex-col items-center justify-center p-4 md:p-8 animate-fade-in text-white selection:bg-yellow-400 relative z-10">
+                <div class="mb-6 md:mb-10 text-center transform hover:scale-105 transition-transform w-full max-w-4xl px-2">
+                    <div class="inline-flex items-center justify-center p-3 sm:p-4 md:p-6 bg-yellow-400 rounded-full border-[4px] sm:border-[6px] md:border-8 border-yellow-500 shadow-[0_6px_0_rgba(161,98,7,1)] md:shadow-[0_10px_0_rgba(161,98,7,1)] mb-4 md:mb-6 animate-pulse-bounce">
+                        <i class="ph-bold ph-magnifying-glass text-4xl md:text-6xl text-yellow-900"></i>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-4 md:mb-6 drop-shadow-[0_4px_4px_rgba(0,0,0,0.3)] leading-tight">
+                        Divisibilidad <span class="text-yellow-400 block sm:inline">Lab</span>
+                    </h1>
+                    
+                    <div class="bg-white/20 backdrop-blur-md border-2 md:border-4 border-white/40 p-4 sm:p-6 md:p-8 rounded-3xl md:rounded-[2rem] shadow-xl md:shadow-2xl mb-6 md:mb-8 mx-auto w-full">
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-yellow-300 mb-3 md:mb-4 drop-shadow-md">
+                            🕵️‍♂️ Misión: Inspección Exacta
+                        </h2>
+                        <p class="text-base sm:text-xl md:text-2xl font-bold text-blue-50 leading-snug md:leading-relaxed mb-6">
+                            ¡Ingresa un número y descubre sus reglas secretas! 🧠✨
+                        </p>
+
+                        <form id="portal-form" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-2xl mx-auto">
+                            <input 
+                                type="number" id="portal-input" min="1" max="999999999999999" placeholder="Escribe un número..."
+                                value="${state.inputValue}"
+                                class="w-full sm:w-2/3 text-center sm:text-left px-4 py-3 sm:px-6 sm:py-4 rounded-2xl md:rounded-3xl text-2xl md:text-4xl font-black text-indigo-900 border-4 border-slate-300 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-400/50 shadow-inner hide-scrollbar bg-white"
+                            />
+                            <button type="submit" class="w-full sm:w-1/3 toy-button px-6 py-4 md:py-5 bg-green-500 border-green-700 rounded-2xl md:rounded-3xl font-black text-xl md:text-3xl text-white shadow-lg hover:bg-green-400 flex items-center justify-center gap-2">
+                                Analizar <i class="ph-fill ph-play-circle text-3xl"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-4xl px-2 pb-10 text-center animate-fade-in" style="animation-delay: 0.3s;">
+                    <p class="text-sm md:text-lg font-bold text-white/80 mb-4">O elige un caso de estudio rápido:</p>
+                    <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+                        ${btnsHTML}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function getModuleIntroHTML() {
+            const digits = getDigits(state.selectedNumber);
+            const digitsHTML = digits.map((digit, index) => `
+                <div class="flex items-center gap-2 sm:gap-3 md:gap-4 animate-pop" style="animation-delay: ${index * 0.15}s">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-32 md:h-32 bg-blue-600 rounded-2xl md:rounded-[2rem] flex items-center justify-center relative shadow-[0_6px_0_rgba(30,58,138,1)] md:shadow-[0_12px_0_rgba(30,58,138,1)] border-2 md:border-4 border-blue-800 transform hover:-translate-y-2 transition-transform">
+                        <span class="text-4xl sm:text-5xl md:text-7xl font-black text-white">${digit}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+            <div class="text-center w-full flex flex-col items-center">
+                <h2 class="text-2xl sm:text-3xl md:text-5xl font-black text-indigo-800 mb-6 md:mb-10 drop-shadow-sm bg-white px-5 py-2 md:px-8 md:py-4 rounded-full border-2 md:border-4 border-indigo-200 shadow-md inline-block">
+                    Número bajo la lupa: <span class="text-pink-600">${state.selectedNumber}</span>
+                </h2>
+                
+                <div class="flex flex-col items-center animate-fade-in w-full max-w-4xl px-2">
+                    <div class="bg-white rounded-3xl md:rounded-[3rem] p-6 sm:p-8 md:p-10 border-4 md:border-8 border-slate-300 shadow-lg w-full mb-6 md:mb-10">
+                        <h3 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-400 mb-6 md:mb-8 uppercase tracking-widest bg-slate-100 inline-block px-4 py-2 md:px-6 md:py-2 rounded-xl md:rounded-2xl">
+                            Separación de Cifras
+                        </h3>
+                        <div class="flex flex-wrap justify-center items-center gap-3 sm:gap-5 md:gap-6 min-h-[120px]">
+                            ${digitsHTML}
+                        </div>
+                    </div>
+
+                    <button data-action="next-module" class="toy-button mt-2 px-6 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-green-500 border-green-700 rounded-2xl md:rounded-[2rem] font-black text-lg sm:text-2xl md:text-3xl text-white shadow-lg md:shadow-xl flex items-center gap-2 md:gap-4 hover:scale-105 hover:bg-green-400 w-full sm:w-auto justify-center">
+                        Ver Criterios <i class="ph-bold ph-arrow-right w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center border-2 md:border-4 border-white rounded-full bg-green-600"></i>
+                    </button>
+                    
+                    ${renderRobotHTML('normal')}
+                </div>
+            </div>`;
+        }
+
+        function getModuleEndsHTML() {
+            const rules = {
+                2: { name: 'Por 2', digits: 1, cond: (n) => [0,2,4,6,8].includes(n % 10), text: 'La última cifra debe ser par (0, 2, 4, 6 u 8).' },
+                4: { name: 'Por 4', digits: 2, cond: (n) => (n % 100) % 4 === 0, text: 'Las 2 últimas cifras deben formar un múltiplo de 4.' },
+                8: { name: 'Por 8', digits: 3, cond: (n) => (n % 1000) % 8 === 0, text: 'Las 3 últimas cifras deben formar un múltiplo de 8.' },
+                5: { name: 'Por 5', digits: 1, cond: (n) => [0,5].includes(n % 10), text: 'La última cifra debe ser 0 o 5.' },
+                25: { name: 'Por 25', digits: 2, cond: (n) => [0, 25, 50, 75].includes(n % 100), text: 'Las 2 últimas cifras deben ser 00, 25, 50 o 75.' },
+            };
+
+            const rule = rules[state.moduleEndsRule];
+            const check = rule.cond(state.selectedNumber);
+            const digitsToLook = rule.digits;
+            const numStr = String(state.selectedNumber);
+            const targetPart = numStr.slice(-digitsToLook);
+            const ignoredPart = numStr.slice(0, numStr.length - digitsToLook);
+
+            const buttonsHTML = Object.keys(rules).map(r => `
+                <button data-action="set-ends-rule" data-rule="${r}" class="toy-button px-4 py-2 md:px-6 md:py-3 rounded-xl font-black text-lg md:text-2xl border-4 ${
+                    state.moduleEndsRule === Number(r) ? 'bg-blue-600 border-blue-800 text-white transform scale-110' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-100'
+                }">÷ ${r}</button>
+            `).join('');
+
+            return `
+            <div class="w-full flex flex-col items-center">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterios de "Las Colas"</h2>
+                
+                <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 w-full max-w-4xl">${buttonsHTML}</div>
+
+                <div class="toy-panel p-6 md:p-10 w-full max-w-3xl flex flex-col items-center relative">
+                    <p class="text-base sm:text-lg md:text-2xl font-bold text-center mb-8 text-slate-600 bg-slate-100 p-4 rounded-xl border-2 border-slate-200">
+                        ${rule.text}
+                    </p>
+
+                    <div class="flex flex-wrap justify-center text-4xl sm:text-6xl md:text-8xl font-black mb-8 items-center bg-white border-4 border-slate-200 p-4 sm:p-6 rounded-3xl shadow-inner w-full">
+                        <span class="text-slate-300 opacity-50 break-all">${ignoredPart}</span>
+                        <div class="relative px-1 sm:px-2 rounded-xl transition-colors duration-500 flex-shrink-0 ${check ? 'bg-green-100 text-green-600 border-4 border-green-500' : 'bg-red-100 text-red-600 border-4 border-red-500'}">
+                            ${targetPart}
+                            <div class="absolute -top-6 -right-6 sm:-top-8 sm:-right-8 animate-pop">
+                                ${check ? '<i class="ph-fill ph-check-circle text-green-500 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>' : '<i class="ph-fill ph-x-circle text-red-500 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-3 sm:p-4 rounded-2xl border-4 text-center w-full ${check ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                        ${check ? `¡SÍ es múltiplo de ${state.moduleEndsRule}!` : `No es múltiplo de ${state.moduleEndsRule}`}
+                    </div>
+                </div>
+                
+                ${renderRobotHTML(check ? 'happy' : 'warning')}
+            </div>`;
+        }
+
+        function getModuleSumHTML() {
+            const digits = getDigits(state.selectedNumber);
+            const sum = digits.reduce((a, b) => a + b, 0);
+            const is3 = sum % 3 === 0;
+            const is9 = sum % 9 === 0;
+
+            const eqHTML = digits.map((d, i) => `
+                <span class="text-blue-600 bg-white px-2 sm:px-3 py-1 sm:py-2 rounded-xl border-4 border-blue-200 shadow-sm">${d}</span>
+                ${i < digits.length - 1 ? '<span class="text-slate-400">+</span>' : ''}
+            `).join('');
+
+            return `
+            <div class="w-full flex flex-col items-center">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterios por 3 y 9</h2>
+                
+                <div class="toy-panel p-6 md:p-10 w-full max-w-4xl flex flex-col items-center">
+                    <div class="bg-purple-100 text-purple-800 text-lg sm:text-xl md:text-2xl font-bold p-4 rounded-xl border-4 border-purple-300 mb-8 text-center w-full">
+                        "Al sumar sus cifras, el resultado debe ser múltiplo de 3 (o de 9)."
+                    </div>
+
+                    <div class="flex flex-wrap justify-center items-center text-3xl sm:text-4xl md:text-6xl font-black mb-8 gap-2 bg-slate-50 p-4 sm:p-6 rounded-3xl border-4 border-slate-200 w-full">
+                        ${eqHTML}
+                        <span class="text-slate-400 mx-1 sm:mx-2">=</span>
+                        <span class="text-white bg-purple-600 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 border-purple-800 shadow-md animate-pulse-bounce mt-2 sm:mt-0">
+                            ${sum}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full mt-4">
+                        <div class="p-4 sm:p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is3 ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-400'}">
+                            <h3 class="text-xl sm:text-2xl font-black mb-2 text-slate-700">¿Múltiplo de 3?</h3>
+                            <div class="text-2xl sm:text-3xl font-bold mb-2">
+                                ${sum} ÷ 3 = <span class="${is3 ? 'text-green-600' : 'text-red-500'}">${is3 ? 'Exacto' : 'Inexacto'}</span>
+                            </div>
+                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is3 ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                                ${is3 ? '¡SÍ ES!' : 'NO ES'}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is9 ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-400'}">
+                            <h3 class="text-2xl font-black mb-2 text-slate-700">¿Múltiplo de 9?</h3>
+                            <div class="text-3xl font-bold mb-2">
+                                ${sum} ÷ 9 = <span class="${is9 ? 'text-green-600' : 'text-red-500'}">${is9 ? 'Exacto' : 'Inexacto'}</span>
+                            </div>
+                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is9 ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                                ${is9 ? '¡SÍ ES!' : 'NO ES'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${renderRobotHTML(is3 || is9 ? 'happy' : 'normal')}
+            </div>`;
+        }
+
+        function getModuleElevenHTML() {
+            const digits = getDigits(state.selectedNumber);
+            let sum = 0;
+            const signs = digits.map((_, i) => (digits.length - 1 - i) % 2 === 0 ? '+' : '-');
+            
+            digits.forEach((d, i) => { sum += signs[i] === '+' ? d : -d; });
+            const is11 = sum % 11 === 0;
+
+            const bubblesHTML = digits.map((d, i) => `
+                <div class="flex flex-col items-center animate-pop mt-2" style="animation-delay: ${i*0.2}s">
+                    <div class="text-xl sm:text-2xl md:text-4xl mb-1 sm:mb-2 font-black w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border-4 ${signs[i] === '+' ? 'bg-green-200 text-green-700 border-green-400' : 'bg-red-200 text-red-700 border-red-400'}">
+                        ${signs[i]}
+                    </div>
+                    <span class="text-slate-800 bg-white px-2 py-1 sm:px-4 sm:py-3 rounded-xl border-4 border-slate-300 shadow-sm">${d}</span>
+                </div>
+            `).join('');
+
+            const inlineEqHTML = digits.map((d, i) => `
+                <span class="whitespace-nowrap ${signs[i] === '+' ? 'text-green-600' : 'text-red-500'}">
+                    ${i === 0 && signs[i] === '+' ? '' : signs[i]} ${d}
+                </span>
+            `).join('');
+
+            return `
+            <div class="w-full flex flex-col items-center">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterio por 11</h2>
+                
+                <div class="toy-panel p-4 sm:p-6 md:p-10 w-full max-w-4xl flex flex-col items-center">
+                    <div class="bg-orange-100 text-orange-800 text-base sm:text-xl md:text-2xl font-bold p-4 rounded-xl border-4 border-orange-300 mb-8 text-center w-full">
+                        "Asigna signos (+ y -) alternados de DERECHA a IZQUIERDA. La suma final debe ser 0 o múltiplo de 11."
+                    </div>
+
+                    <div class="flex flex-wrap justify-center items-end text-3xl sm:text-4xl md:text-6xl font-black mb-10 gap-2 sm:gap-4 bg-slate-50 p-4 sm:p-8 rounded-3xl border-4 border-slate-200 w-full">
+                        ${bubblesHTML}
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 mb-8 bg-white p-4 rounded-2xl border-4 border-slate-100 w-full">
+                        ${inlineEqHTML}
+                        <span class="text-slate-400 mx-2 sm:mx-4">=</span>
+                        <span class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 text-white shadow-md mt-2 sm:mt-0 ${is11 ? 'bg-green-500 border-green-700' : 'bg-slate-700 border-slate-900'}">
+                            ${sum}
+                        </span>
+                    </div>
+
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is11 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-500 text-white border-red-700'}">
+                        ${is11 ? `¡${sum === 0 ? '0' : sum} es múltiplo de 11!` : `${sum} NO es múltiplo de 11`}
+                    </div>
+                </div>
+                ${renderRobotHTML(is11 ? 'happy' : 'normal')}
+            </div>`;
+        }
+
+        function getModuleSevenHTML() {
+            const digits = getDigits(state.selectedNumber);
+            const seq7 = [1, 3, 2, -1, -3, -2];
+            const mults = digits.map((_, i) => seq7[(digits.length - 1 - i) % 6]);
+            
+            let sum = 0;
+            const products = digits.map((d, i) => {
+                const prod = d * mults[i];
+                sum += prod;
+                return prod;
+            });
+            const is7 = sum % 7 === 0;
+
+            const cardsHTML = digits.map((d, i) => `
+                <div class="flex flex-col items-center bg-slate-50 p-2 sm:p-3 md:p-4 rounded-2xl border-4 border-slate-200 flex-shrink-0 animate-pop snap-center min-w-[80px] sm:min-w-[100px]" style="animation-delay: ${i*0.1}s">
+                    <span class="text-2xl sm:text-3xl md:text-5xl font-black text-slate-800 mb-1 sm:mb-2">${d}</span>
+                    <span class="text-slate-400 text-lg sm:text-xl font-black">×</span>
+                    <span class="text-lg sm:text-xl md:text-3xl font-black px-2 py-1 rounded-lg border-2 mt-1 sm:mt-2 ${mults[i] > 0 ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}">
+                        ${mults[i] > 0 ? `+${mults[i]}` : mults[i]}
+                    </span>
+                    <span class="text-slate-400 text-lg sm:text-xl font-black mt-1 sm:mt-2">=</span>
+                    <span class="text-xl sm:text-2xl md:text-4xl font-black mt-1 sm:mt-2 ${products[i] >= 0 ? 'text-green-600' : 'text-red-500'}">
+                        ${products[i] > 0 && i !== 0 ? `+${products[i]}` : products[i]}
+                    </span>
+                </div>
+            `).join('');
+
+            return `
+            <div class="w-full flex flex-col items-center">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterio por 7</h2>
+                
+                <div class="toy-panel p-4 md:p-8 w-full max-w-5xl flex flex-col items-center">
+                    <div class="bg-blue-100 text-blue-800 text-base sm:text-lg md:text-xl font-bold p-4 rounded-xl border-4 border-blue-300 mb-6 sm:mb-8 text-center w-full">
+                        "Multiplica cada cifra de derecha a izquierda por el código: <br/> <strong class="text-red-600 text-xl sm:text-2xl tracking-widest bg-white px-2 py-1 rounded inline-block mt-2">1, 3, 2, -1, -3, -2</strong> <br/> y suma los resultados. Debe ser múltiplo de 7."
+                    </div>
+
+                    <div class="flex flex-nowrap justify-start md:justify-center items-center gap-2 md:gap-4 mb-8 w-full overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory px-2">
+                        ${cardsHTML}
+                    </div>
+
+                    <div class="flex flex-wrap justify-center items-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 sm:gap-4 mb-8 bg-white p-4 px-4 sm:px-8 rounded-2xl border-4 border-slate-200 shadow-inner w-full">
+                        <span class="text-slate-500">Suma:</span>
+                        <span class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 text-white shadow-md ${is7 ? 'bg-green-500 border-green-700' : 'bg-slate-700 border-slate-900'}">
+                            ${sum}
+                        </span>
+                    </div>
+
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is7 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-500 text-white border-red-700'}">
+                        ${is7 ? `¡${sum === 0 ? '0' : sum} es múltiplo de 7!` : `${sum} NO es múltiplo de 7`}
+                    </div>
+                </div>
+                ${renderRobotHTML(is7 ? 'happy' : 'normal')}
+            </div>`;
+        }
+
+        function getModuleChallengeHTML() {
+            let contentHTML = '';
+
+            if (state.challenge.status === 'won') {
+                contentHTML = `
+                <div class="absolute inset-0 bg-green-500 z-20 flex flex-col items-center justify-center animate-fade-in p-4">
+                    <i class="ph-fill ph-trophy text-yellow-300 animate-bounce drop-shadow-2xl text-[100px] md:text-[160px] mb-8"></i>
+                    <h2 class="text-4xl md:text-7xl font-black text-white drop-shadow-lg mb-6 transform -rotate-3 text-center">¡INSPECCIÓN PERFECTA!</h2>
+                    <p class="text-green-900 text-2xl md:text-3xl font-black mb-10 bg-yellow-400 px-8 py-3 rounded-full border-4 border-yellow-600 shadow-md">Puntaje: ${state.challenge.score} XP 🚀</p>
+                    <button data-action="reset-challenge" class="toy-button px-8 py-4 bg-white text-green-700 font-black text-2xl rounded-3xl hover:bg-slate-100 border-slate-300">
+                        Jugar de nuevo
+                    </button>
+                </div>`;
+            } else if (state.challenge.status === 'lost') {
+                contentHTML = `
+                <div class="absolute inset-0 bg-red-600 z-20 flex flex-col items-center justify-center animate-fade-in p-4">
+                    <i class="ph-fill ph-x-circle text-white animate-pulse drop-shadow-2xl text-[100px] md:text-[160px] mb-8"></i>
+                    <h2 class="text-4xl md:text-7xl font-black text-white drop-shadow-lg mb-10 text-center">¡Ups! Algo falló</h2>
+                    <button data-action="reset-challenge" class="toy-button px-8 py-4 bg-white text-red-700 font-black text-2xl rounded-3xl hover:bg-slate-100 border-slate-300">
+                        Corregir errores
+                    </button>
+                </div>`;
+            } else {
+                const buttonsHTML = challengeDivisors.map((d, idx) => {
+                    const isSelected = state.challenge.answers[d] || false;
+                    const classes = isSelected 
+                        ? 'bg-green-500 text-white border-green-700 scale-110 shadow-[0_8px_0_rgba(21,128,61,1)] transform -translate-y-2' 
+                        : 'bg-slate-600 text-slate-300 border-slate-500 border-b-[6px] md:border-b-[8px] hover:border-slate-400 hover:bg-slate-500 hover:-translate-y-1';
+                    
+                    return `
+                    <button data-action="toggle-challenge" data-divisor="${d}" class="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl text-2xl sm:text-3xl md:text-5xl font-black transition-all duration-200 shadow-xl border-4 animate-pop flex items-center justify-center ${classes}" style="animation-delay: ${idx * 0.05}s">
+                        ÷${d}
+                    </button>`;
+                }).join('');
+
+                contentHTML = `
+                <div class="mb-6 sm:mb-8 relative z-10 bg-white p-4 sm:p-6 rounded-3xl border-4 border-slate-300 shadow-lg inline-block w-full max-w-xs sm:max-w-md">
+                    <h3 class="text-lg sm:text-xl md:text-3xl font-black text-slate-500 mb-2 uppercase tracking-widest">¿Es divisible?</h3>
+                    <p class="text-4xl sm:text-5xl md:text-7xl text-blue-700 font-black tracking-tighter break-words">${state.selectedNumber}</p>
+                </div>
+                <p class="text-yellow-400 text-base sm:text-lg md:text-2xl font-bold mb-6 sm:mb-8 px-2">Marca <span class="bg-green-500 text-white px-2 rounded">verde</span> si ES divisible. Déjalo gris si NO lo es.</p>
+                
+                <div class="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 relative z-10 max-w-3xl mx-auto">
+                    ${buttonsHTML}
+                </div>
+
+                <div class="relative z-10 w-full flex flex-col items-center gap-6">
+                    <button data-action="check-challenge" class="toy-button px-6 py-4 sm:px-10 sm:py-5 md:px-14 md:py-6 bg-gradient-to-b from-blue-500 to-blue-700 border-blue-900 rounded-full font-black text-xl sm:text-2xl md:text-4xl text-white transition-all shadow-[0_8px_0_rgba(30,58,138,1)] md:shadow-[0_10px_0_rgba(30,58,138,1)] transform hover:scale-105 w-full sm:w-auto max-w-xs sm:max-w-none">
+                        Verificar 🚀
+                    </button>
+                </div>`;
+            }
+
+            return `
+            <div class="w-full flex flex-col items-center">
+                <div class="toy-panel p-6 sm:p-8 md:p-14 w-full max-w-5xl text-center relative overflow-hidden bg-slate-800 min-h-[500px] flex flex-col justify-center border-slate-900 border-b-[8px] md:border-b-[16px]">
+                    ${contentHTML}
+                </div>
+            </div>`;
+        }
+
+        function getDashboardHTML() {
+            renderParticles('dashboard');
+            
+            const sidebarHTML = modulesInfo.map(mod => {
+                const isActive = state.activeModule === mod.id;
+                const activeClass = isActive 
+                    ? 'bg-blue-600 border-blue-800 text-white shadow-sm md:shadow-md transform scale-105 origin-center md:origin-left z-10' 
+                    : 'bg-slate-100 border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-200';
+                const iconBgClass = isActive ? 'bg-white/20 text-white' : `bg-white shadow-sm ${mod.color}`;
+                
+                return `
+                <button data-action="set-module" data-id="${mod.id}" class="toy-button flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl transition-all duration-200 whitespace-nowrap flex-shrink-0 border-[3px] md:border-4 ${activeClass}">
+                    <div class="p-1.5 md:p-2 rounded-lg md:rounded-xl ${iconBgClass}">
+                        <i class="${mod.icon} w-5 h-5 md:w-7 md:h-7 text-xl flex items-center justify-center"></i>
+                    </div>
+                    <span class="font-black text-sm sm:text-base md:text-xl">${mod.title}</span>
+                </button>`;
+            }).join('');
+
+            let mainContentHTML = '';
+            if (state.activeModule === 1) mainContentHTML = getModuleIntroHTML();
+            if (state.activeModule === 2) mainContentHTML = getModuleEndsHTML();
+            if (state.activeModule === 3) mainContentHTML = getModuleSumHTML();
+            if (state.activeModule === 4) mainContentHTML = getModuleElevenHTML();
+            if (state.activeModule === 5) mainContentHTML = getModuleSevenHTML();
+            if (state.activeModule === 6) mainContentHTML = getModuleChallengeHTML();
+
+            return `
+            <header class="relative z-10 bg-white border-b-4 md:border-b-8 border-slate-300 p-3 md:p-4 flex flex-row justify-between items-center gap-2 md:gap-4 shadow-md w-full">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-green-400 to-teal-600 flex items-center justify-center shadow-[0_4px_0_rgba(15,118,110,1)] md:shadow-[0_6px_0_rgba(15,118,110,1)] transform rotate-3 border-2 md:border-4 border-white">
+                        <i class="ph-fill ph-sparkle text-white text-xl md:text-3xl"></i>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-purple-700 tracking-tight drop-shadow-sm leading-none">TuProfe20</h1>
+                        <p class="text-[10px] sm:text-xs md:text-sm font-black text-pink-600 uppercase tracking-widest leading-tight mt-1">
+                            Criterios: ${state.selectedNumber}
+                        </p>
+                    </div>
+                </div>
+                <button data-action="go-home" class="toy-button px-3 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-xl bg-red-500 text-white border-red-700 shadow-md hover:bg-red-400 flex items-center gap-1 md:gap-2">
+                    <i class="ph-bold ph-house text-xl md:text-2xl"></i> <span class="hidden sm:inline">Volver</span>
+                </button>
+            </header>
+
+            <div class="flex flex-col md:flex-row flex-1 relative z-10 overflow-hidden w-full">
+                <nav class="w-full md:w-64 bg-white border-b-4 md:border-b-0 md:border-r-8 border-slate-300 p-2 md:p-4 flex flex-row md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-y-auto z-20 shadow-md md:shadow-lg hide-scrollbar items-center md:items-stretch">
+                    ${sidebarHTML}
+                </nav>
+                <main class="flex-1 p-3 sm:p-4 md:p-8 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-100 relative w-full">
+                    <div class="w-full max-w-6xl mx-auto min-h-full flex flex-col items-center justify-center animate-fade-in relative z-10 pb-10">
+                        ${mainContentHTML}
+                    </div>
+                </main>
+            </div>`;
+        }
+
+        function renderApp() {
+            const container = document.getElementById('ui-layer');
+            if (state.inPortal) {
+                container.innerHTML = getPortalHTML();
+                // Setup forms specifically for portal
+                const form = document.getElementById('portal-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const input = document.getElementById('portal-input');
+                        const num = parseInt(input.value, 10);
+                        if (num && num > 0 && num <= 999999999999999) {
+                            playSound('pop');
+                            state.selectedNumber = num;
+                            state.activeModule = 1;
+                            state.inPortal = false;
+                            renderApp();
+                        } else {
+                            playSound('error');
+                        }
+                    });
+                    
+                    document.getElementById('portal-input').addEventListener('input', (e) => {
+                         if (e.target.value.length > 15) {
+                             e.target.value = e.target.value.slice(0, 15);
+                         }
+                         state.inputValue = e.target.value;
+                    });
+                }
+            } else {
+                container.innerHTML = getDashboardHTML();
+                
+                // Ejecutar logica del robot dependiendo del modulo
+                if(state.activeModule === 1) initRobotTyping("Para aplicar los criterios de divisibilidad, a veces miraremos las últimas cifras, y otras veces sumaremos, restaremos o multiplicaremos las cifras por separado. ¡Vamos!");
+                if(state.activeModule === 2) {
+                    const rule = [0,2,4,6,8].includes(state.selectedNumber % 10) && state.moduleEndsRule===2 ? 'happy' : 'warning';
+                    initRobotTyping(`Para el ${state.moduleEndsRule}, ignoramos el inicio del número y solo observamos las últimas cifras.`);
+                }
+                if(state.activeModule === 3) initRobotTyping("Todo número que es divisible por 9 también lo es por 3. ¡Pero no al revés! Siempre verifica la suma total.");
+                if(state.activeModule === 4) initRobotTyping("¡Ojo! Empezamos poniendo el signo '+' en la cifra de las unidades (a la derecha) y luego alternamos.");
+                if(state.activeModule === 5) initRobotTyping("El código se repite infinitamente si el número es más largo. ¡Recuerda siempre empezar por la derecha con el 1!");
+            }
+        }
+
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+
+            if (action === 'select-number') {
+                playSound('pop');
+                state.selectedNumber = parseInt(btn.dataset.num, 10);
+                state.activeModule = 1;
+                state.inPortal = false;
+                renderApp();
+            }
+            
+            if (action === 'go-home') {
+                playSound('pop');
+                state.inPortal = true;
+                state.challenge = { status: 'playing', answers: {}, score: 0 };
+                renderApp();
+            }
+
+            if (action === 'set-module') {
+                const id = parseInt(btn.dataset.id, 10);
+                if (state.activeModule !== id) {
+                    playSound('click');
+                    state.activeModule = id;
+                    renderApp();
+                }
+            }
+
+            if (action === 'next-module') {
+                playSound('click');
+                state.activeModule = 2;
+                renderApp();
+            }
+
+            if (action === 'set-ends-rule') {
+                playSound('pop');
+                state.moduleEndsRule = parseInt(btn.dataset.rule, 10);
+                renderApp();
+            }
+
+            if (action === 'toggle-challenge') {
+                if (state.challenge.status !== 'playing') return;
+                playSound('pop');
+                const d = parseInt(btn.dataset.divisor, 10);
+                state.challenge.answers[d] = !state.challenge.answers[d];
+                renderApp();
+            }
+
+            if (action === 'check-challenge') {
+                let allCorrect = true;
+                challengeDivisors.forEach(d => {
+                    const isDiv = isDivisible(state.selectedNumber, d);
+                    const userAnswer = state.challenge.answers[d] || false;
+                    if (isDiv !== userAnswer) allCorrect = false;
+                });
+                
+                if (allCorrect) {
+                    playSound('success');
+                    state.challenge.status = 'won';
+                    state.challenge.score = 100;
+                } else {
+                    playSound('error');
+                    state.challenge.status = 'lost';
+                }
+                renderApp();
+            }
+
+            if (action === 'reset-challenge') {
+                playSound('pop');
+                state.challenge.status = 'playing';
+                state.challenge.answers = {};
+                renderApp();
+            }
+        });
+
+        // Inicializar App
+        window.onload = renderApp;
+
+    </script>
+</body>
+</html>
