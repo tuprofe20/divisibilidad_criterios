@@ -6,7 +6,12 @@
     <title>Lab Criterios de Divisibilidad</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Carga directa de CSS de Phosphor Icons (Garantiza que SIEMPRE carguen los símbolos) -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
@@ -103,12 +108,12 @@
         const challengeDivisors = [2, 3, 4, 5, 7, 8, 9, 11];
 
         const modulesInfo = [
-            { id: 1, title: '¡A Jugar!', icon: 'ph-play-circle', color: 'text-pink-600' },
-            { id: 2, title: 'Las Colas', icon: 'ph-magnifying-glass', color: 'text-blue-600' },
-            { id: 3, title: 'Suma Mágica', icon: 'ph-plus-circle', color: 'text-purple-600' },
-            { id: 4, title: 'Criterio del 11', icon: 'ph-arrows-down-up', color: 'text-orange-600' },
-            { id: 5, title: 'El Código del 7', icon: 'ph-key', color: 'text-red-600' },
-            { id: 6, title: 'El Reto', icon: 'ph-trophy', color: 'text-yellow-500' },
+            { id: 1, title: '¡A Jugar!', icon: 'ph-bold ph-play-circle', color: 'text-blue-600' },
+            { id: 2, title: 'Las Colas', icon: 'ph-bold ph-magnifying-glass', color: 'text-blue-600' },
+            { id: 3, title: 'Suma Mágica', icon: 'ph-bold ph-plus-circle', color: 'text-purple-600' },
+            { id: 4, title: 'Criterio del 11', icon: 'ph-bold ph-arrows-down-up', color: 'text-orange-600' },
+            { id: 5, title: 'El Código del 7', icon: 'ph-bold ph-key', color: 'text-red-600' },
+            { id: 6, title: 'El Reto', icon: 'ph-bold ph-trophy', color: 'text-yellow-500' },
         ];
 
         // variables para timeouts
@@ -201,22 +206,22 @@
 
         function renderRobotHTML(mood = 'normal') {
             const moods = {
-                normal: { bg: 'bg-blue-500', border: 'border-blue-700', icon: 'ph-robot text-white animate-bounce' },
-                happy: { bg: 'bg-green-500', border: 'border-green-700', icon: 'ph-robot text-white animate-bounce' },
-                warning: { bg: 'bg-red-500', border: 'border-red-700', icon: 'ph-warning text-white animate-pulse' }
+                normal: { bg: 'bg-blue-600', border: 'border-blue-800', icon: 'ph-bold ph-robot text-white animate-bounce' },
+                happy: { bg: 'bg-green-500', border: 'border-green-700', icon: 'ph-bold ph-robot text-white animate-bounce' },
+                warning: { bg: 'bg-red-600', border: 'border-red-800', icon: 'ph-bold ph-warning text-white animate-pulse' }
             };
             const current = moods[mood];
 
             return `
             <div class="flex items-end gap-3 md:gap-4 animate-pop w-full mt-4 max-w-3xl mx-auto relative z-20 hover:scale-105 transition-transform duration-300">
                 <div class="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 ${current.bg} rounded-2xl md:rounded-3xl flex items-center justify-center border-2 md:border-4 ${current.border} shadow-[0_4px_0_rgba(0,0,0,0.15)] animate-float-robot cursor-help">
-                    <i class="ph-bold ${current.icon} text-3xl md:text-4xl"></i>
+                    <i class="${current.icon} text-3xl md:text-4xl"></i>
                 </div>
-                <div class="bg-white border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-2xl md:rounded-3xl rounded-bl-none shadow-md relative flex-1 cursor-default">
-                    <div class="absolute -left-3 bottom-2 w-4 h-4 bg-white border-b-2 md:border-b-4 border-l-2 md:border-l-4 border-slate-200 transform rotate-45"></div>
-                    <p class="text-sm sm:text-base md:text-lg font-bold text-slate-700 relative z-10 leading-snug min-h-[2.5rem]">
+                <div class="bg-white border-4 border-slate-300 p-3 md:p-5 rounded-2xl md:rounded-3xl rounded-bl-none shadow-md relative flex-1 cursor-default">
+                    <div class="absolute -left-3 bottom-2 w-4 h-4 bg-white border-b-4 border-l-4 border-slate-300 transform rotate-45"></div>
+                    <p class="text-sm sm:text-base md:text-lg font-black text-slate-800 relative z-10 leading-snug min-h-[2.5rem]">
                         <span id="robot-typing-text"></span>
-                        <span class="inline-block w-2 h-4 sm:h-5 bg-slate-400 ml-1 align-middle animate-pulse"></span>
+                        <span class="inline-block w-2 h-4 sm:h-5 bg-blue-500 ml-1 align-middle animate-pulse"></span>
                     </p>
                 </div>
             </div>`;
@@ -350,22 +355,22 @@
                 
                 <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 w-full max-w-4xl">${buttonsHTML}</div>
 
-                <div class="toy-panel p-6 md:p-10 w-full max-w-3xl flex flex-col items-center relative">
-                    <p class="text-base sm:text-lg md:text-2xl font-bold text-center mb-8 text-slate-600 bg-slate-100 p-4 rounded-xl border-2 border-slate-200">
+                <div class="toy-panel p-6 md:p-10 w-full max-w-3xl flex flex-col items-center relative border-blue-600 border-4">
+                    <p class="text-base sm:text-lg md:text-2xl font-black text-center mb-8 text-blue-900 bg-white p-4 rounded-xl border-4 border-blue-600 shadow-[0_4px_0_rgba(37,99,235,1)]">
                         ${rule.text}
                     </p>
 
-                    <div class="flex flex-wrap justify-center text-4xl sm:text-6xl md:text-8xl font-black mb-8 items-center bg-white border-4 border-slate-200 p-4 sm:p-6 rounded-3xl shadow-inner w-full">
-                        <span class="text-slate-300 opacity-50 break-all">${ignoredPart}</span>
-                        <div class="relative px-1 sm:px-2 rounded-xl transition-colors duration-500 flex-shrink-0 ${check ? 'bg-green-100 text-green-600 border-4 border-green-500' : 'bg-red-100 text-red-600 border-4 border-red-500'}">
+                    <div class="flex flex-wrap justify-center text-4xl sm:text-6xl md:text-8xl font-black mb-8 items-center bg-white border-4 border-slate-300 p-4 sm:p-6 rounded-3xl shadow-inner w-full">
+                        <span class="text-slate-300 break-all">${ignoredPart}</span>
+                        <div class="relative px-1 sm:px-2 rounded-xl transition-colors duration-500 flex-shrink-0 ${check ? 'bg-green-500 text-white border-4 border-green-700' : 'bg-red-600 text-white border-4 border-red-800'}">
                             ${targetPart}
                             <div class="absolute -top-6 -right-6 sm:-top-8 sm:-right-8 animate-pop">
-                                ${check ? '<i class="ph-fill ph-check-circle text-green-500 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>' : '<i class="ph-fill ph-x-circle text-red-500 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>'}
+                                ${check ? '<i class="ph-fill ph-check-circle text-green-500 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>' : '<i class="ph-fill ph-x-circle text-red-600 text-5xl md:text-6xl bg-white rounded-full border-4 border-white"></i>'}
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-3 sm:p-4 rounded-2xl border-4 text-center w-full ${check ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-3 sm:p-4 rounded-2xl border-4 text-center w-full ${check ? 'bg-green-500 text-white border-green-700' : 'bg-red-600 text-white border-red-800'}">
                         ${check ? `¡SÍ es múltiplo de ${state.moduleEndsRule}!` : `No es múltiplo de ${state.moduleEndsRule}`}
                     </div>
                 </div>
@@ -381,7 +386,7 @@
             const is9 = sum % 9 === 0;
 
             const eqHTML = digits.map((d, i) => `
-                <span class="text-blue-600 bg-white px-2 sm:px-3 py-1 sm:py-2 rounded-xl border-4 border-blue-200 shadow-sm">${d}</span>
+                <span class="text-blue-600 bg-white px-2 sm:px-3 py-1 sm:py-2 rounded-xl border-4 border-blue-600 shadow-sm">${d}</span>
                 ${i < digits.length - 1 ? '<span class="text-slate-400">+</span>' : ''}
             `).join('');
 
@@ -389,12 +394,12 @@
             <div class="w-full flex flex-col items-center">
                 <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterios por 3 y 9</h2>
                 
-                <div class="toy-panel p-6 md:p-10 w-full max-w-4xl flex flex-col items-center">
-                    <div class="bg-purple-100 text-purple-800 text-lg sm:text-xl md:text-2xl font-bold p-4 rounded-xl border-4 border-purple-300 mb-8 text-center w-full">
+                <div class="toy-panel p-6 md:p-10 w-full max-w-4xl flex flex-col items-center border-purple-600 border-4">
+                    <div class="bg-white text-purple-900 text-lg sm:text-xl md:text-2xl font-black p-4 rounded-xl border-4 border-purple-600 shadow-[0_4px_0_rgba(147,51,234,1)] mb-8 text-center w-full">
                         "Al sumar sus cifras, el resultado debe ser múltiplo de 3 (o de 9)."
                     </div>
 
-                    <div class="flex flex-wrap justify-center items-center text-3xl sm:text-4xl md:text-6xl font-black mb-8 gap-2 bg-slate-50 p-4 sm:p-6 rounded-3xl border-4 border-slate-200 w-full">
+                    <div class="flex flex-wrap justify-center items-center text-3xl sm:text-4xl md:text-6xl font-black mb-8 gap-2 bg-white p-4 sm:p-6 rounded-3xl border-4 border-slate-300 w-full shadow-inner">
                         ${eqHTML}
                         <span class="text-slate-400 mx-1 sm:mx-2">=</span>
                         <span class="text-white bg-purple-600 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 border-purple-800 shadow-md animate-pulse-bounce mt-2 sm:mt-0">
@@ -403,22 +408,22 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full mt-4">
-                        <div class="p-4 sm:p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is3 ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-400'}">
-                            <h3 class="text-xl sm:text-2xl font-black mb-2 text-slate-700">¿Múltiplo de 3?</h3>
-                            <div class="text-2xl sm:text-3xl font-bold mb-2">
-                                ${sum} ÷ 3 = <span class="${is3 ? 'text-green-600' : 'text-red-500'}">${is3 ? 'Exacto' : 'Inexacto'}</span>
+                        <div class="p-4 sm:p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is3 ? 'bg-white border-green-500' : 'bg-white border-red-500'}">
+                            <h3 class="text-xl sm:text-2xl font-black mb-2 text-slate-800">¿Múltiplo de 3?</h3>
+                            <div class="text-2xl sm:text-3xl font-black mb-2">
+                                ${sum} ÷ 3 = <span class="${is3 ? 'text-green-600' : 'text-red-600'}">${is3 ? 'Exacto' : 'Inexacto'}</span>
                             </div>
-                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is3 ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is3 ? 'bg-green-500 text-white border-green-700' : 'bg-red-600 text-white border-red-800'}">
                                 ${is3 ? '¡SÍ ES!' : 'NO ES'}
                             </div>
                         </div>
 
-                        <div class="p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is9 ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-400'}">
-                            <h3 class="text-2xl font-black mb-2 text-slate-700">¿Múltiplo de 9?</h3>
-                            <div class="text-3xl font-bold mb-2">
-                                ${sum} ÷ 9 = <span class="${is9 ? 'text-green-600' : 'text-red-500'}">${is9 ? 'Exacto' : 'Inexacto'}</span>
+                        <div class="p-6 rounded-2xl border-4 flex flex-col items-center text-center ${is9 ? 'bg-white border-green-500' : 'bg-white border-red-500'}">
+                            <h3 class="text-2xl font-black mb-2 text-slate-800">¿Múltiplo de 9?</h3>
+                            <div class="text-3xl font-black mb-2">
+                                ${sum} ÷ 9 = <span class="${is9 ? 'text-green-600' : 'text-red-600'}">${is9 ? 'Exacto' : 'Inexacto'}</span>
                             </div>
-                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is9 ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}">
+                            <div class="text-2xl font-black px-4 py-2 rounded-xl border-4 ${is9 ? 'bg-green-500 text-white border-green-700' : 'bg-red-600 text-white border-red-800'}">
                                 ${is9 ? '¡SÍ ES!' : 'NO ES'}
                             </div>
                         </div>
@@ -438,7 +443,7 @@
 
             const bubblesHTML = digits.map((d, i) => `
                 <div class="flex flex-col items-center animate-pop mt-2" style="animation-delay: ${i*0.2}s">
-                    <div class="text-xl sm:text-2xl md:text-4xl mb-1 sm:mb-2 font-black w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border-4 ${signs[i] === '+' ? 'bg-green-200 text-green-700 border-green-400' : 'bg-red-200 text-red-700 border-red-400'}">
+                    <div class="text-xl sm:text-2xl md:text-4xl mb-1 sm:mb-2 font-black w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border-4 ${signs[i] === '+' ? 'bg-green-500 text-white border-green-700' : 'bg-red-600 text-white border-red-800'}">
                         ${signs[i]}
                     </div>
                     <span class="text-slate-800 bg-white px-2 py-1 sm:px-4 sm:py-3 rounded-xl border-4 border-slate-300 shadow-sm">${d}</span>
@@ -446,7 +451,7 @@
             `).join('');
 
             const inlineEqHTML = digits.map((d, i) => `
-                <span class="whitespace-nowrap ${signs[i] === '+' ? 'text-green-600' : 'text-red-500'}">
+                <span class="whitespace-nowrap ${signs[i] === '+' ? 'text-green-600' : 'text-red-600'}">
                     ${i === 0 && signs[i] === '+' ? '' : signs[i]} ${d}
                 </span>
             `).join('');
@@ -455,16 +460,16 @@
             <div class="w-full flex flex-col items-center">
                 <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterio por 11</h2>
                 
-                <div class="toy-panel p-4 sm:p-6 md:p-10 w-full max-w-4xl flex flex-col items-center">
-                    <div class="bg-orange-100 text-orange-800 text-base sm:text-xl md:text-2xl font-bold p-4 rounded-xl border-4 border-orange-300 mb-8 text-center w-full">
+                <div class="toy-panel p-4 sm:p-6 md:p-10 w-full max-w-4xl flex flex-col items-center border-orange-500 border-4">
+                    <div class="bg-white text-orange-900 text-base sm:text-xl md:text-2xl font-black p-4 rounded-xl border-4 border-orange-500 shadow-[0_4px_0_rgba(249,115,22,1)] mb-8 text-center w-full">
                         "Asigna signos (+ y -) alternados de DERECHA a IZQUIERDA. La suma final debe ser 0 o múltiplo de 11."
                     </div>
 
-                    <div class="flex flex-wrap justify-center items-end text-3xl sm:text-4xl md:text-6xl font-black mb-10 gap-2 sm:gap-4 bg-slate-50 p-4 sm:p-8 rounded-3xl border-4 border-slate-200 w-full">
+                    <div class="flex flex-wrap justify-center items-end text-3xl sm:text-4xl md:text-6xl font-black mb-10 gap-2 sm:gap-4 bg-white p-4 sm:p-8 rounded-3xl border-4 border-slate-300 w-full shadow-inner">
                         ${bubblesHTML}
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 mb-8 bg-white p-4 rounded-2xl border-4 border-slate-100 w-full">
+                    <div class="flex flex-wrap items-center justify-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 mb-8 bg-white p-4 rounded-2xl border-4 border-slate-300 w-full">
                         ${inlineEqHTML}
                         <span class="text-slate-400 mx-2 sm:mx-4">=</span>
                         <span class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 text-white shadow-md mt-2 sm:mt-0 ${is11 ? 'bg-green-500 border-green-700' : 'bg-slate-700 border-slate-900'}">
@@ -472,7 +477,7 @@
                         </span>
                     </div>
 
-                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is11 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-500 text-white border-red-700'}">
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is11 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-600 text-white border-red-800'}">
                         ${is11 ? `¡${sum === 0 ? '0' : sum} es múltiplo de 11!` : `${sum} NO es múltiplo de 11`}
                     </div>
                 </div>
@@ -494,14 +499,14 @@
             const is7 = sum % 7 === 0;
 
             const cardsHTML = digits.map((d, i) => `
-                <div class="flex flex-col items-center bg-slate-50 p-2 sm:p-3 md:p-4 rounded-2xl border-4 border-slate-200 flex-shrink-0 animate-pop snap-center min-w-[80px] sm:min-w-[100px]" style="animation-delay: ${i*0.1}s">
+                <div class="flex flex-col items-center bg-white p-2 sm:p-3 md:p-4 rounded-2xl border-4 border-slate-300 flex-shrink-0 animate-pop snap-center min-w-[80px] sm:min-w-[100px] shadow-sm" style="animation-delay: ${i*0.1}s">
                     <span class="text-2xl sm:text-3xl md:text-5xl font-black text-slate-800 mb-1 sm:mb-2">${d}</span>
                     <span class="text-slate-400 text-lg sm:text-xl font-black">×</span>
-                    <span class="text-lg sm:text-xl md:text-3xl font-black px-2 py-1 rounded-lg border-2 mt-1 sm:mt-2 ${mults[i] > 0 ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}">
+                    <span class="text-lg sm:text-xl md:text-3xl font-black px-2 py-1 rounded-lg border-4 mt-1 sm:mt-2 ${mults[i] > 0 ? 'bg-green-500 text-white border-green-700' : 'bg-red-600 text-white border-red-800'}">
                         ${mults[i] > 0 ? `+${mults[i]}` : mults[i]}
                     </span>
                     <span class="text-slate-400 text-lg sm:text-xl font-black mt-1 sm:mt-2">=</span>
-                    <span class="text-xl sm:text-2xl md:text-4xl font-black mt-1 sm:mt-2 ${products[i] >= 0 ? 'text-green-600' : 'text-red-500'}">
+                    <span class="text-xl sm:text-2xl md:text-4xl font-black mt-1 sm:mt-2 ${products[i] >= 0 ? 'text-green-600' : 'text-red-600'}">
                         ${products[i] > 0 && i !== 0 ? `+${products[i]}` : products[i]}
                     </span>
                 </div>
@@ -511,23 +516,23 @@
             <div class="w-full flex flex-col items-center">
                 <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6 bg-white px-6 py-3 rounded-2xl border-4 border-slate-200 shadow-sm">Criterio por 7</h2>
                 
-                <div class="toy-panel p-4 md:p-8 w-full max-w-5xl flex flex-col items-center">
-                    <div class="bg-blue-100 text-blue-800 text-base sm:text-lg md:text-xl font-bold p-4 rounded-xl border-4 border-blue-300 mb-6 sm:mb-8 text-center w-full">
-                        "Multiplica cada cifra de derecha a izquierda por el código: <br/> <strong class="text-red-600 text-xl sm:text-2xl tracking-widest bg-white px-2 py-1 rounded inline-block mt-2">1, 3, 2, -1, -3, -2</strong> <br/> y suma los resultados. Debe ser múltiplo de 7."
+                <div class="toy-panel p-4 md:p-8 w-full max-w-5xl flex flex-col items-center border-red-500 border-4">
+                    <div class="bg-white text-red-900 text-base sm:text-lg md:text-xl font-black p-4 rounded-xl border-4 border-red-500 shadow-[0_4px_0_rgba(239,68,68,1)] mb-6 sm:mb-8 text-center w-full">
+                        "Multiplica cada cifra de derecha a izquierda por el código: <br/> <strong class="text-white bg-red-600 border-2 border-red-800 text-xl sm:text-2xl tracking-widest px-3 py-1 rounded-lg inline-block mt-2">1, 3, 2, -1, -3, -2</strong> <br/> y suma los resultados. Debe ser múltiplo de 7."
                     </div>
 
                     <div class="flex flex-nowrap justify-start md:justify-center items-center gap-2 md:gap-4 mb-8 w-full overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory px-2">
                         ${cardsHTML}
                     </div>
 
-                    <div class="flex flex-wrap justify-center items-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 sm:gap-4 mb-8 bg-white p-4 px-4 sm:px-8 rounded-2xl border-4 border-slate-200 shadow-inner w-full">
+                    <div class="flex flex-wrap justify-center items-center text-2xl sm:text-3xl md:text-5xl font-black gap-2 sm:gap-4 mb-8 bg-white p-4 px-4 sm:px-8 rounded-2xl border-4 border-slate-300 shadow-inner w-full">
                         <span class="text-slate-500">Suma:</span>
                         <span class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-4 text-white shadow-md ${is7 ? 'bg-green-500 border-green-700' : 'bg-slate-700 border-slate-900'}">
                             ${sum}
                         </span>
                     </div>
 
-                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is7 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-500 text-white border-red-700'}">
+                    <div class="text-xl sm:text-2xl md:text-4xl font-black p-4 px-4 sm:px-8 rounded-2xl border-4 text-center w-full ${is7 ? 'bg-green-500 text-white border-green-700 animate-pulse-bounce' : 'bg-red-600 text-white border-red-800'}">
                         ${is7 ? `¡${sum === 0 ? '0' : sum} es múltiplo de 7!` : `${sum} NO es múltiplo de 7`}
                     </div>
                 </div>
@@ -602,16 +607,16 @@
             const sidebarHTML = modulesInfo.map(mod => {
                 const isActive = state.activeModule === mod.id;
                 const activeClass = isActive 
-                    ? 'bg-blue-600 border-blue-800 text-white shadow-sm md:shadow-md transform scale-105 origin-center md:origin-left z-10' 
-                    : 'bg-slate-100 border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-200';
-                const iconBgClass = isActive ? 'bg-white/20 text-white' : `bg-white shadow-sm ${mod.color}`;
+                    ? 'bg-blue-600 border-blue-800 text-white shadow-lg transform scale-105 origin-center md:origin-left z-10' 
+                    : 'bg-white border-slate-300 text-slate-700 hover:border-blue-400 hover:text-blue-600 hover:bg-slate-50';
+                const iconColorClass = isActive ? 'text-white' : mod.color;
                 
                 return `
-                <button data-action="set-module" data-id="${mod.id}" class="toy-button flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl transition-all duration-200 whitespace-nowrap flex-shrink-0 border-[3px] md:border-4 ${activeClass}">
-                    <div class="p-1.5 md:p-2 rounded-lg md:rounded-xl ${iconBgClass}">
-                        <i class="${mod.icon} w-5 h-5 md:w-7 md:h-7 text-xl flex items-center justify-center"></i>
+                <button data-action="set-module" data-id="${mod.id}" class="toy-button flex items-center gap-3 px-3 py-3 md:px-4 md:py-4 rounded-xl md:rounded-2xl transition-all duration-200 whitespace-nowrap flex-shrink-0 border-4 ${activeClass} w-full text-left">
+                    <div class="flex items-center justify-center bg-transparent">
+                        <i class="${mod.icon} text-2xl md:text-3xl ${iconColorClass}"></i>
                     </div>
-                    <span class="font-black text-sm sm:text-base md:text-xl">${mod.title}</span>
+                    <span class="font-black text-sm sm:text-base md:text-xl flex-1">${mod.title}</span>
                 </button>`;
             }).join('');
 
@@ -626,26 +631,26 @@
             return `
             <header class="relative z-10 bg-white border-b-4 md:border-b-8 border-slate-300 p-3 md:p-4 flex flex-row justify-between items-center gap-2 md:gap-4 shadow-md w-full">
                 <div class="flex items-center gap-2 md:gap-3">
-                    <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-green-400 to-teal-600 flex items-center justify-center shadow-[0_4px_0_rgba(15,118,110,1)] md:shadow-[0_6px_0_rgba(15,118,110,1)] transform rotate-3 border-2 md:border-4 border-white">
-                        <i class="ph-fill ph-sparkle text-white text-xl md:text-3xl"></i>
+                    <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-green-500 flex items-center justify-center shadow-[0_4px_0_rgba(21,128,61,1)] md:shadow-[0_6px_0_rgba(21,128,61,1)] transform rotate-3 border-2 md:border-4 border-white">
+                        <i class="ph-bold ph-sparkle text-white text-xl md:text-3xl"></i>
                     </div>
                     <div class="flex flex-col justify-center">
-                        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-purple-700 tracking-tight drop-shadow-sm leading-none">TuProfe20</h1>
+                        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-blue-700 tracking-tight drop-shadow-sm leading-none">TuProfe20</h1>
                         <p class="text-[10px] sm:text-xs md:text-sm font-black text-pink-600 uppercase tracking-widest leading-tight mt-1">
                             Criterios: ${state.selectedNumber}
                         </p>
                     </div>
                 </div>
-                <button data-action="go-home" class="toy-button px-3 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-xl bg-red-500 text-white border-red-700 shadow-md hover:bg-red-400 flex items-center gap-1 md:gap-2">
+                <button data-action="go-home" class="toy-button px-3 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-xl bg-red-600 text-white border-red-800 shadow-md hover:bg-red-500 flex items-center gap-1 md:gap-2">
                     <i class="ph-bold ph-house text-xl md:text-2xl"></i> <span class="hidden sm:inline">Volver</span>
                 </button>
             </header>
 
             <div class="flex flex-col md:flex-row flex-1 relative z-10 overflow-hidden w-full">
-                <nav class="w-full md:w-64 bg-white border-b-4 md:border-b-0 md:border-r-8 border-slate-300 p-2 md:p-4 flex flex-row md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-y-auto z-20 shadow-md md:shadow-lg hide-scrollbar items-center md:items-stretch">
+                <nav class="w-full md:w-64 bg-slate-100 border-b-4 md:border-b-0 md:border-r-4 border-slate-300 p-3 md:p-4 flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto z-20 shadow-md hide-scrollbar items-center md:items-stretch">
                     ${sidebarHTML}
                 </nav>
-                <main class="flex-1 p-3 sm:p-4 md:p-8 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-100 relative w-full">
+                <main class="flex-1 p-3 sm:p-4 md:p-8 overflow-y-auto overflow-x-hidden bg-white relative w-full">
                     <div class="w-full max-w-6xl mx-auto min-h-full flex flex-col items-center justify-center animate-fade-in relative z-10 pb-10">
                         ${mainContentHTML}
                     </div>
